@@ -1,16 +1,23 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {diff} from 'json-diff'
+import fs from 'fs/promises'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const first: string = core.getInput('first')
+    const second: string = core.getInput('second')
+    core.debug('first:')
+    core.debug(first)
+    core.debug('second:')
+    core.debug(second)
 
     core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
+    const firstJson = await fs.readFile(first, 'utf8')
+    const secondJson = await fs.readFile(second, 'utf8')
+    const df = diff(JSON.parse(firstJson), JSON.parse(secondJson))
     core.debug(new Date().toTimeString())
 
-    core.setOutput('time', new Date().toTimeString())
+    core.setOutput('diff', df)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
